@@ -18,6 +18,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -39,12 +41,31 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun TelaPrincipal(modifier: Modifier = Modifier) {
+    var capitulo = remember { mutableStateOf(1) }
+    var versiculo = remember { mutableStateOf(1) }
+    var chave = remember { mutableStateOf("PSA_${capitulo.value}_${versiculo.value}") }
+    val texto = remember { mutableStateOf(getVersoPorReferencia(chave.value)) }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy (45.dp)  ,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Titulo(chave.value)
+        Texto(texto.value ?: "")
+        Botoes(capitulo, versiculo, chave, texto)
+    }
+}
+
 
 
 @Composable
-fun Texto() {
+fun Texto(textoCalculado: String) {
     Text(
-        text = "Bem-aventurado o homem que não anda segundo o conselho dos ímpios, nem se detém no caminho dos pecadores, nem se assenta na roda dos escarnecedores.",
+        text = textoCalculado,
         style = TextStyle(
             fontSize = 24.sp
         )
@@ -52,7 +73,12 @@ fun Texto() {
 }
 
 @Composable
-fun Botoes(modifier: Modifier = Modifier) {
+fun Botoes(
+    capitulo: androidx.compose.runtime.MutableState<Int>,
+    versiculo: androidx.compose.runtime.MutableState<Int>,
+    chave: androidx.compose.runtime.MutableState<String>,
+    texto: androidx.compose.runtime.MutableState<String?>,
+    modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxSize()
@@ -62,7 +88,11 @@ fun Botoes(modifier: Modifier = Modifier) {
     ) {
 
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                versiculo.value-=5;
+                chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                texto.value = getVersoPorReferencia(chave.value)
+            },
             modifier = modifier.padding(2.dp),
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.Magenta )
 
@@ -76,7 +106,24 @@ fun Botoes(modifier: Modifier = Modifier) {
             )
         }
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                versiculo.value--;
+                chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                val tt = getVersoPorReferencia(chave.value)
+                if (tt?.isEmpty() != true) {
+                    texto.value = tt
+                } else {
+                    capitulo.value-=1
+                    if (capitulo.value < 1) {
+                        capitulo.value = 1
+                        versiculo.value = 1
+                    } else {
+                        versiculo.value = getNumeroVersosPorCapitulo(capitulo.value)
+                    }
+                    chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                    texto.value = getVersoPorReferencia(chave.value)
+                }
+                      },
             modifier = modifier.padding(2.dp)
         ) {
             Text(
@@ -87,7 +134,25 @@ fun Botoes(modifier: Modifier = Modifier) {
                     ))
         }
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                versiculo.value++;
+                chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                val tt = getVersoPorReferencia(chave.value)
+                if (tt?.isEmpty() != true) {
+                    texto.value = tt
+                } else {
+                    capitulo.value++
+                    if (capitulo.value > 150) {
+                        capitulo.value = 150
+                        versiculo.value = getNumeroVersosPorCapitulo(capitulo.value)
+                    } else {
+                        versiculo.value = 1
+                    }
+                    versiculo.value=1
+                    chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                    texto.value = getVersoPorReferencia(chave.value)
+                }
+             },
             modifier = modifier.padding(2.dp)
         ) {
             Text(
@@ -99,7 +164,11 @@ fun Botoes(modifier: Modifier = Modifier) {
             )
         }
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                versiculo.value+=5;
+                chave.value = "PSA_${capitulo.value}_${versiculo.value}"
+                texto.value = getVersoPorReferencia(chave.value)
+            },
             modifier = modifier.padding(2.dp)            ,
             colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.Magenta )
         ) {
@@ -114,67 +183,44 @@ fun Botoes(modifier: Modifier = Modifier) {
 }
 
 
-@Composable
-fun TelaPrincipal(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy (45.dp)  ,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Titulo()
-        Capitulo()
-        VersoPosicao()
-        Spacer(modifier = Modifier.size(30.dp))
-        Texto()
-        Spacer(modifier = Modifier.size(30.dp))
-        Botoes()
-    }
-}
+
 
 @Composable
-fun Capitulo() {
-    Text(
-        text = "Salmo 1",
-        style = TextStyle(
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp
-        )
-    )
-}
-
-@Composable
-fun Titulo() {
+fun Titulo(chave: String, modifier: Modifier = Modifier) {
+    val partes = chave.split("_")
+    val capitulo = partes.getOrNull(1) ?: "1"
+    val versiculo = partes.getOrNull(2) ?: "1"
     Text(
         "Salmos Verso a Verso",
-                style = TextStyle(
-                fontWeight = FontWeight.Bold,
-        fontSize = 32.sp
+        style = TextStyle(
+            fontWeight = FontWeight.Bold,
+            fontSize = 32.sp
+        )
     )
+    Text(chave,
+        style = TextStyle(
+            fontSize = 18.sp
+        )
     )
-}
-
-@Composable
-fun VersoPosicao(modifier: Modifier = Modifier) {
     Row (
         modifier = modifier
             .height(60.dp)
             .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
-        Text("Verso: 1",
+        Text("Cap: $capitulo",
             style = TextStyle(
-                fontSize = 22.sp
+                fontSize = 24.sp
             ))
         Spacer(modifier = Modifier.width(60.dp))
-        Text("Posição: 1",
+        Text("Verso: $versiculo",
             style = TextStyle(
-                fontSize = 22.sp
+                fontSize = 24.sp
             ))
     }
-
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
