@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +41,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TelaPrincipal(
-
+                contexto = LocalContext.current
             )
         }
     }
@@ -70,23 +71,23 @@ fun loadVersoAtual(context: Context): String? {
 }
 
 @Composable
-fun TelaPrincipal(modifier: Modifier = Modifier) {
+fun TelaPrincipal(modifier: Modifier = Modifier, contexto: Context) {
     var capitulo = remember { mutableStateOf(1) }
     var versiculo = remember { mutableStateOf(1) }
-    val contexto = LocalContext.current
+   // val contexto = LocalContext.current
     val tentativa = loadVersoAtual(contexto) ?: "PSA_${capitulo.value}_${versiculo.value}"
     var chave = remember { mutableStateOf(tentativa) }
     val texto = remember { mutableStateOf(getVersoPorReferencia(chave.value)) }
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy (45.dp)  ,
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy (55.dp)  ,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Titulo(chave.value)
-        Texto(texto.value ?: "")
         Botoes(capitulo, versiculo, chave, texto)
+        Texto(texto.value ?: "")
     }
 }
 
@@ -98,7 +99,8 @@ fun Texto(textoCalculado: String) {
         text = textoCalculado,
         style = TextStyle(
             fontSize = 24.sp
-        )
+        ),
+        modifier = Modifier.fillMaxSize()
     )
 }
 
@@ -112,7 +114,7 @@ fun Botoes(
     val contexto = LocalContext.current
     Row(
         modifier = modifier
-            .fillMaxSize()
+            .height(60.dp)
             .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceAround
 
@@ -265,12 +267,14 @@ fun Titulo(chave: String, modifier: Modifier = Modifier) {
         "Salmos Verso a Verso",
         style = TextStyle(
             fontWeight = FontWeight.Bold,
-            fontSize = 32.sp
+            fontSize = 32.sp,
+            color = Color.Magenta
         )
     )
     Text(chave,
         style = TextStyle(
-            fontSize = 18.sp
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
         )
     )
     Row (
@@ -296,5 +300,6 @@ fun Titulo(chave: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun VersoaVersoPreview() {
-    TelaPrincipal()
+    val contexto = LocalContext.current
+    TelaPrincipal(contexto = contexto)
 }
